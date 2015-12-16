@@ -1,0 +1,18 @@
+{
+  "name": "zoho-attendance-fetcher",
+  "version": "1.0.0",
+  "description": "Downloads Zoho People Attendance Reports",
+  "main": "zoho.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ivan Poddubny <ivan.poddubny@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.0.6",
+    "lodash": "^3.10.1",
+    "moment": "^2.10.6",
+    "needle": "^0.11.0",
+    "uuid": "^2.0.1"
+  }
+}

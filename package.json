@@ -2,7 +2,7 @@
   "name": "zoho-attendance-fetcher",
   "version": "1.0.0",
   "description": "Downloads Zoho People Attendance Reports",
-  "main": "zoho.js",
+  "main": "fetch-data.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

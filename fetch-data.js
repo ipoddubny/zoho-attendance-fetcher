@@ -31,6 +31,10 @@ function fetchAttendance(params, cookies) {
     return needle.postAsync(attendanceURL, reqParams, options)
       .then(function (res) {
 
+        if (!res.body.report) {
+          throw new Error('Server returned something wrong: ' + JSON.stringify(res.body));
+        }
+
         dataBuffer = dataBuffer.concat(res.body.report);
 
         var len = res.body.report.length;

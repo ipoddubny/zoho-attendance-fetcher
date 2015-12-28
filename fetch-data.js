@@ -89,10 +89,21 @@ function getDataFromZoho(date) {
   var sdate = moment(date).date(1).format('DD-MMM-YYYY');
   var edate = moment(date).add(1, 'months').date(0).format('DD-MMM-YYYY');
 
+  var cookies;
+
   return logInToZoho(config.login, config.password)
     .then(function (res) {
 
-      return fetchAttendance({sdate: sdate, edate: edate}, res.cookies);
+      cookies = res.cookies;
+
+      return fetchAttendance({sdate: sdate, edate: edate}, cookies)
+    })
+    .then(function (data) {
+
+      // logging out is a mandatory
+      needle.getAsync('https://accounts.zoho.com/logout?serviceurl=https://www.zoho.com/people/zohopeople-logout.html', {cookies: cookies});
+
+      return data;
     });
 }
 

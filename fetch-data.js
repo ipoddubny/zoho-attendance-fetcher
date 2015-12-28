@@ -6,36 +6,18 @@ var uuid = require('uuid');
 var moment = require('moment');
 
 
-var loginURL = 'https://accounts.zoho.com/login?servicename=zohopeople';
-var attendanceURL = 'https://people.zoho.com/people/AttendanceAction.do';
-
-
-var loginToken = uuid.v1();
-var requestToken = uuid.v1();
-
 var config = require('./config');
 
-var data = {
-  LOGIN_ID: config.login,
-  PASSWORD: config.password,
-  IS_AJAX: 'true',
-  remember: 2592000,
-  iamcsrcoo: loginToken
-};
-
-var options = {
-  cookies: {
-    iamcsr: loginToken
-  }
-};
 
 function fetchAttendance(params, cookies) {
 
   var dataBuffer = [];
   var startIndex = 1;
   var ttl = 5;
+  var requestToken = uuid.v1();
+  var attendanceURL = 'https://people.zoho.com/people/AttendanceAction.do';
 
-  var params = _.extend({}, params, {
+  var reqParams = _.extend({}, params, {
     mode: 'customReport',
     conreqcsr: requestToken
   });
@@ -46,7 +28,7 @@ function fetchAttendance(params, cookies) {
 
   var getNext = function () {
 
-    return needle.postAsync(attendanceURL, params, options)
+    return needle.postAsync(attendanceURL, reqParams, options)
       .then(function (res) {
 
         dataBuffer = dataBuffer.concat(res.body.report);
@@ -64,7 +46,7 @@ function fetchAttendance(params, cookies) {
 
         startIndex += 50;
 
-        _.extend(params, {startIndex: startIndex});
+        _.extend(reqParams, {startIndex: startIndex});
 
         return Promise.delay(300).then(function () {
           return getNext();
@@ -76,16 +58,38 @@ function fetchAttendance(params, cookies) {
 }
 
 
+function logInToZoho(login, password) {
+
+  var loginToken = uuid.v1();
+
+  var data = {
+    LOGIN_ID: login,
+    PASSWORD: password,
+    IS_AJAX: 'true',
+    remember: 2592000,
+    iamcsrcoo: loginToken
+  };
+
+  var loginURL = 'https://accounts.zoho.com/login?servicename=zohopeople';
+
+  return needle.postAsync(loginURL, data, {
+    cookies: {
+      iamcsr: loginToken
+    }
+  });
+}
+
+
 function getDataFromZoho(date) {
 
   var sdate = moment(date).date(1).format('DD-MMM-YYYY');
   var edate = moment(date).add(1, 'months').date(0).format('DD-MMM-YYYY');
 
-  return needle.postAsync(loginURL, data, options)
+  return logInToZoho(config.login, config.password)
     .then(function (res) {
 
       return fetchAttendance({sdate: sdate, edate: edate}, res.cookies);
-    })
+    });
 }
 
 

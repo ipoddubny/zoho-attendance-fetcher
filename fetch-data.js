@@ -15,7 +15,7 @@ function fetchAttendance(params, cookies) {
   var startIndex = 1;
   var ttl = 5;
   var requestToken = uuid.v1();
-  var attendanceURL = 'https://people.zoho.com/people/AttendanceAction.do';
+  var attendanceURL = 'https://people.zoho.com/people/AttendanceReportAction.do';
 
   var reqParams = _.extend({}, params, {
     mode: 'customReport',

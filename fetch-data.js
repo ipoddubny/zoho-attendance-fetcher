@@ -86,8 +86,8 @@ function logInToZoho(login, password) {
 
 function getDataFromZoho(date) {
 
-  var sdate = moment(date).date(1).format('DD-MMM-YYYY');
-  var edate = moment(date).add(1, 'months').date(0).format('DD-MMM-YYYY');
+  var sdate = moment(date).subtract(1, 'day').startOf('month').format('DD-MMM-YYYY');
+  var edate = moment(date).subtract(1, 'day').endOf('month').format('DD-MMM-YYYY');
 
   var cookies;
 

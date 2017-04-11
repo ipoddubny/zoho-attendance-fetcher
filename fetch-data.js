@@ -4,12 +4,12 @@ var Promise = require('bluebird');
 Promise.promisifyAll(needle);
 var uuid = require('uuid');
 var moment = require('moment');
-
+var fs = require('fs');
 
 var config = require('./config');
 
 
-function fetchAttendance(params, cookies) {
+function fetchAttendance(params, cookies, modeReport, resBody) {
 
   var dataBuffer = [];
   var startIndex = 1;
@@ -18,7 +18,7 @@ function fetchAttendance(params, cookies) {
   var attendanceURL = 'https://people.zoho.com/people/AttendanceReportAction.do';
 
   var reqParams = _.extend({}, params, {
-    mode: 'customReport',
+    mode: modeReport,
     conreqcsr: requestToken
   });
 
@@ -31,13 +31,13 @@ function fetchAttendance(params, cookies) {
     return needle.postAsync(attendanceURL, reqParams, options)
       .then(function (res) {
 
-        if (!res.body.report) {
+        if (!res.body[resBody]) {
           throw new Error('Server returned something wrong: ' + JSON.stringify(res.body));
         }
 
-        dataBuffer = dataBuffer.concat(res.body.report);
+        dataBuffer = dataBuffer.concat(res.body[resBody]);
 
-        var len = res.body.report.length;
+        var len = res.body[resBody].length;
         // Received all the data, return from the chain
         if (len < 50) {
           return dataBuffer;
@@ -84,7 +84,7 @@ function logInToZoho(login, password) {
 }
 
 
-function getDataFromZoho(date) {
+function getDataFromZoho(date, modeReport, resBody) {
 
   var sdate = moment(date).subtract(1, 'day').startOf('month').format('DD-MMM-YYYY');
   var edate = moment(date).subtract(1, 'day').endOf('month').format('DD-MMM-YYYY');
@@ -96,7 +96,7 @@ function getDataFromZoho(date) {
 
       cookies = res.cookies;
 
-      return fetchAttendance({sdate: sdate, edate: edate}, cookies)
+      return fetchAttendance({sdate: sdate, edate: edate}, cookies, modeReport, resBody)
     })
     .then(function (data) {
 
@@ -107,15 +107,25 @@ function getDataFromZoho(date) {
     });
 }
 
+//===================================================
 
-getDataFromZoho()
+getDataFromZoho(new Date(), 'customReport', 'report')
   .then(function (data) {
-
-    console.log(JSON.stringify(data, 0, 2));
+    fs.writeFileSync('./data/' + moment(new Date()).subtract(1, 'day').format('YYYY-MM-DD') + '.json', JSON.stringify(data, 0, 2));
+    return fs.writeFileSync('./data/' + moment(new Date()).subtract(1, 'day').endOf('month').format('YYYY-MM') + '.json', JSON.stringify(data, 0, 2));
   })
   .catch(function (err) {
+    console.error('FAIL. Something went terribly wrong.customReport');
+    console.error(err);
+    process.exit(1);
+  });
 
-    console.error('FAIL. Something went terribly wrong.');
+getDataFromZoho(new Date(), 'monthlyReport', 'dayList')
+  .then(function (data) {
+    return fs.writeFileSync('./data/' + moment(new Date()).subtract(1, 'day').endOf('month').format('YYYY-MM-')+ 'presence' + '.json', JSON.stringify(data, 0, 2));
+  })
+  .catch(function (err) {
+    console.error('FAIL. Something went terribly wrong.monthlyReport');
     console.error(err);
     process.exit(1);
   });
